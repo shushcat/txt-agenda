@@ -1,7 +1,7 @@
 #!/bin/sh
 
 set -eu
-umask u=rwx,og= # TODO figure this
+umask u=rwx,og=
 
 if command -v fzf >/dev/null; then 
         RPTCMD=fzf_report
@@ -61,9 +61,8 @@ get_sort_lines() {
 		grep -nH '\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\][\+\!\-]' $file; 
 	done)
 	DATE_LINES=$(echo "${DATE_LINES}" | \
-	# Split lines with Awk such that every date on a line is
-	# output as a new line which begins with that date in [YYYY-MM-DD]
-	# format.
+	# Split lines with Awk such that every date on a line is output as a
+	# new instance of that line headed by that date in [YYYY-MM-DD] format.
 		awk '
 			BEGIN {
 				FS=":"
@@ -138,7 +137,7 @@ fzf_report() {
                 --preview-window=up)
         selected_file_name=$(echo "${selected}" | cut -d':' -f2)
         selected_line_num=$(echo "${selected}" | cut -d':' -f3)
-        # TODO portability?
+        # TODO Settle on nice, portable format.
         exec "echo" "$selected_line_num" "$selected_file_name"
 }
 

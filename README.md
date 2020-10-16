@@ -1,64 +1,27 @@
 # txt-agenda
 
-`txt-agenda` is a script for keeping track of dates and deadlines scattered throughout a series of text files.  So far as I know, it is entirely POSIX compliant with the `-f` flag, and when that flag is omitted, the only additional dependency is [fzf]().
+`txt-agenda` is a script for keeping track of dates and deadlines scattered throughout a series of text files.  So far as I know, it is entirely POSIX compliant with the `-f` flag, and when that flag is omitted, the only additional dependency is [fzf]().  While this documentation is obviously incomplete, the script itself is functional.
 
-# desired behavior
+## Syntax
 
-Deadline and reminder syntax like that used by Howm mode in Emacs.
-See https://www.emacswiki.org/emacs/HowmMode.
+The deadline and reminder syntax used by `txt-agenda` is taken from [Howm mode](http://howm.osdn.jp/) for Emacs, but the agenda behavior when using [fzf](https://github.com/junegunn/fzf) is closer to that of [Org-mode](https://orgmode.org/).
+
 The format is as follows:
 
 - Reminders `[YYYY-MM-DD]-` sink after the date
 - Tasks `[YYYY-MM-DD]+` float after the date
 - Deadlines `[YYYY-MM-DD]!` float before and after the date
 
-A simpler alternative may be desirable.  What about
-- `[YYYY-MM-DD]` for sinking reminders,
-- `.[YYYY-MM-DD]` for floating tasks, and
-- `![YYYY-MM-DD]` for floating deadlines?
+As with Howm, repeated entries are achieved by entering multiple dates.
 
-## repeating events
+## Flags
 
-How should these work?  Should they even be allowed?  What is the desired behavior?
+ | `-f` | Report without `fzf`                                          | 
+ | `-h` | Print help message                                            | 
+ | `-y` | Output agenda items for the year centered on the current date | 
 
-Format                  Action
--------                 -----------------------------
-[2020-06-12 +1m]-       Advance date by one month.
-[2020-06-12 ++1m]-      Advance the date by one month at a time until it is in the future.
-[2020-06-12 .+1m]-      Advance the date by one month from today.
 
-[2020-06-12]-1m
-[2020-06-12]-1y
-
-What about a syntax that included ranges in it?
-
-[2020-[7-12]-8] for the 8th of the months from July through December.
-
-### Remind
-
-The syntax for [Remind](https://dianne.skoll.ca/projects/remind/) command is very flexible, but its complex syntax would obscure the ISO dates.
-
-### Org Mode
-
-The "repeater" markers from [Org Mode](https://orgmode.org/manual/Repeated-tasks.html#Repeated-tasks) are promising.  The syntax has the form `[.+]?\+\d[ymd]` so that, eg, "+1m"  and ".+42y" are both valid markers.
-
-### Howm
-
-The author of Howm recommends^[https://www.emacswiki.org/emacs/HowmMode and http://howm.osdn.jp/README.html] that one enter copies of an event to make it repeat, but I think that is bad.  Better to use wildcards, as is done with Cron.  Then if one wants to, say, have an event repeat every year on the first of August, e would write [*-08-01]?, where '?' represents the chosen suffix.
-
-# resources
-
-- On the pattern of https://github.com/msprev/fzf-bibtex, using Go.
-- https://github.com/bigH/git-fuzzy
-- Howm: http://howm.osdn.jp/
-- Ascetic bullet journaling: http://karolis.koncevicius.lt/posts/ascetic_bullet_journal/
-
-# Display different date ranges
-prospective flags
-    -f (forward), -b (back)
-    -y for year view?  -w for week and -m for month (default)
-
-# progress
+## progress
 
 - [ ] Vim plugin for fzf.
 - [ ] Setup man file (will need to look into roff).
@@ -74,3 +37,10 @@ prospective flags
 - [X] test filtering with fzf now!
 - [X] fix line display; ex: `[YYYY-MM-DD]+:LINUM:LINE:FILE`
 - [X] preserve references to files while arranging the agenda
+
+## Related Projects and Resources
+
+- On the pattern of https://github.com/msprev/fzf-bibtex, using Go.
+- https://github.com/bigH/git-fuzzy
+- Howm: http://howm.osdn.jp/
+- Ascetic bullet journaling: http://karolis.koncevicius.lt/posts/ascetic_bullet_journal/
