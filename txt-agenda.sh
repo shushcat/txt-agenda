@@ -11,11 +11,23 @@ fi
 RNGCMD=set_month_range
 
 usage() {
-        # TODO update this so it actually means something
 	cat 1>&2 <<-EOF
 	${1:+Error: ${1}}
-	USAGE:  ${0##*/} [-efhy] files
-        Some day, you will look to txt-agenda(1) for surehanded guidance in all things.
+	USAGE:  ${0##*/} [-fhy] FILES
+
+	Display an agenda based on [YYYY-MM-DD] formated dates in FILES.
+
+	Syntax:
+	[YYYY-MM-DD]-	is a sinking reminder,
+	[YYYY-MM-DD]+	is a floating task, and
+	[YYYY-MM-DD]!	is a looming deadline.
+	
+	Flags: 
+	-f	Suppress fzf on systems where it is present.
+	-h	Show this message.
+	-y	Output a yearlong agenda, centered on today.
+
+	Some day, you will look to txt-agenda(1) for surehanded guidance in all things.
 
 	EOF
 	exit ${1:+1}
@@ -137,7 +149,6 @@ fzf_report() {
                 --preview-window=up)
         selected_file_name=$(echo "${selected}" | cut -d':' -f2)
         selected_line_num=$(echo "${selected}" | cut -d':' -f3)
-        # TODO Settle on nice, portable format.
         exec "echo" "$selected_line_num" "$selected_file_name"
 }
 

@@ -1,27 +1,29 @@
 # txt-agenda
 
-`txt-agenda` is a script for keeping track of dates and deadlines scattered throughout a series of text files.  So far as I know, it is entirely POSIX compliant with the `-f` flag, and when that flag is omitted, the only additional dependency is [fzf]().  While this documentation is obviously incomplete, the script itself is functional.
+Txt-agenda is a script for keeping track of dates and deadlines kept in text files.  It's core logic is POSIX compliant, but it opportunistically uses [fzf](https://github.com/junegunn/fzf) to filter, display, and jump to lines.
 
-## Syntax
+## Demo
 
-The deadline and reminder syntax used by `txt-agenda` is taken from [Howm mode](http://howm.osdn.jp/) for Emacs, but the agenda behavior when using [fzf](https://github.com/junegunn/fzf) is closer to that of [Org-mode](https://orgmode.org/).
+Coming soon....
 
-The format is as follows:
+![](http://johnob.sdf.org/resources/txt-agenda_demo.gif)
 
-- Reminders `[YYYY-MM-DD]-` sink after the date
-- Tasks `[YYYY-MM-DD]+` float after the date
-- Deadlines `[YYYY-MM-DD]!` float before and after the date
+## Usage
 
-As with Howm, repeated entries are achieved by entering multiple dates.
+When invoked as `txt-agenda FILES`, Txt-agenda generates a chronological list of the dates found in the text files `FILES`.  In order for a date to be recognized by Txt-agenda, it must be in one of three forms:
 
-## Flags
+- Reminders `[YYYY-MM-DD]-` sink after their date,
+- Tasks `[YYYY-MM-DD]+` float after their date, and
+- Deadlines `[YYYY-MM-DD]!` float before and after their date.
 
+What that means is that a line containing the date `[2077-10-16]-` will not appear until October 16th (of 2077), then will sink as time passes until it falls outside the agenda span.  In contrast to that behavior, a line containing `[2077-10-16]+` will float near the top of the agenda once the 16th arrives, and a line containing `[2077-10-16]!` will appear at the top of the agenda several weeks before the 16th, then will float afterwards.
+
+ | ---  | ---                                                           | 
  | `-f` | Report without `fzf`                                          | 
  | `-h` | Print help message                                            | 
  | `-y` | Output agenda items for the year centered on the current date | 
 
-
-## progress
+## Progress
 
 - [ ] Vim plugin for fzf.
 - [ ] Setup man file (will need to look into roff).
@@ -38,9 +40,6 @@ As with Howm, repeated entries are achieved by entering multiple dates.
 - [X] fix line display; ex: `[YYYY-MM-DD]+:LINUM:LINE:FILE`
 - [X] preserve references to files while arranging the agenda
 
-## Related Projects and Resources
+## Credit
 
-- On the pattern of https://github.com/msprev/fzf-bibtex, using Go.
-- https://github.com/bigH/git-fuzzy
-- Howm: http://howm.osdn.jp/
-- Ascetic bullet journaling: http://karolis.koncevicius.lt/posts/ascetic_bullet_journal/
+The deadline and reminder syntax used by `txt-agenda` is taken from [Howm mode](http://howm.osdn.jp/) for Emacs, but the agenda behavior when using [fzf](https://github.com/junegunn/fzf) is closer to that of [Org-mode](https://orgmode.org/).
