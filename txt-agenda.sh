@@ -34,38 +34,49 @@ usage() {
 }
 
 set_date_sentinels() {
-        YEAR=$(date "+%Y")
-        BYEAR=${YEAR}
-        FYEAR=${YEAR}
-        MONTH=$(date "+%m")
-        DAY=$(date "+%d")
+	YEAR=$(strip_leading_zeroes $(date "+%Y"))
+	MONTH=$(strip_leading_zeroes $(date "+%m"))
+	DAY=$(strip_leading_zeroes $(date "+%d"))
         ${RNGCMD}
 }
 
+strip_leading_zeroes() {
+	n=$1
+	while [ "$n" != "${n#0}" ] ;do n=${n#0};done
+	echo $n
+}
+
+format_date() {
+	y=$1
+	m=$2
+	d=$3
+	printf "%04d-%02d-%02d" $y $m $d
+}
+
 set_month_range() {
-        BMONTH=$(printf "%02d" $((10#${MONTH} - 1)))
-        FMONTH=$(printf "%02d" $((10#${MONTH} + 1)))
-        # Adjust the year if it's January or December.
+        BYEAR=${YEAR}
+        FYEAR=${YEAR}
+	BMONTH=$(($MONTH - 1))
+	FMONTH=$(($MONTH + 1))
+        # Account for January and December.
         if [ "${MONTH}" -eq 1 ]; then
-                echo "first"
                 BMONTH=12
-                BYEAR=$(printf "%04d" $((10#${YEAR} - 1)))
+                BYEAR=$((${YEAR} - 1))
         elif [ "${MONTH}" -eq 12 ]; then
-                echo "second"
                 FMONTH=01
-                FYEAR=$(printf "%04d" $((10#${YEAR} + 1)))
+                FYEAR=$((${YEAR} + 1))
         fi
-        PAST_SENTINEL="${BYEAR}-${BMONTH}-${DAY}"
-        PRESENT_SENTINEL="${YEAR}-${MONTH}-$((10#${DAY} + 1))"
-        FUTURE_SENTINEL="${FYEAR}-${FMONTH}-${DAY}"
+        PAST_SENTINEL="$(format_date ${BYEAR} ${BMONTH} ${DAY})"
+	PRESENT_SENTINEL="$(format_date ${YEAR} ${MONTH} $(($DAY + 1)))"
+	FUTURE_SENTINEL="$(format_date ${FYEAR} ${FMONTH} ${DAY})"
 }
 
 set_year_range() {
-        BYEAR=$(printf "%04d" $((10#${YEAR} - 1)))
-        FYEAR=$(printf "%04d" $((10#${YEAR} + 1)))
-        PAST_SENTINEL="${BYEAR}-${MONTH}-${DAY}"
-        PRESENT_SENTINEL="${YEAR}-${MONTH}-${DAY}"
-        FUTURE_SENTINEL="${FYEAR}-${MONTH}-${DAY}"
+        BYEAR=$((${YEAR} - 1))
+        FYEAR=$((${YEAR} + 1))
+        PAST_SENTINEL="$(format_date ${BYEAR} ${MONTH} ${DAY})"
+	PRESENT_SENTINEL="$(format_date ${YEAR} ${MONTH} $(($DAY + 1)))"
+	FUTURE_SENTINEL="$(format_date ${FYEAR} ${MONTH} ${DAY})"
 }
 
 get_sort_lines() {
