@@ -142,22 +142,25 @@ report() {
         exit
 }
 
+fzf_preview() {
+	beg=$(echo "$1" | cut -d':' -f3)
+	date=$(echo "$1" | cut -d':' -f1 | sed "s/^\[\([0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\)\]./\1/")
+	file=$(echo "$1" | cut -d':' -f2) 
+	marker=$(echo "$1" | cut -d':' -f1 | sed "s/^\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\]\(.\)/\1/")
+	if [ $beg -lt 4 ]; then
+		hln=$beg
+		beg=1
+	else
+		hln=4
+		beg=$(($beg-3))
+	fi
+	sed -n -e "$beg,+20p" "$file" | \
+		sed -e ${hln}s/[[]$date[]]$marker/`printf "\e[7m"`\[$date\]$marker`printf "\e[0m"`/g
+	exit
+}
+
 fzf_report() {
-        # Shellcheck doesn't like the below quoting for `--preview`, but fzf needs it.
-        selected=$(report | fzf --tac --no-sort +s --delimiter=":" --preview \
-                'beg=$(printf "%d" {3});
-                        date=$(echo {1} | sed "s/^\[\([0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\)\]./\1/")
-                        marker=$(echo {1} | sed "s/^\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\]\(.\)/\1/")
-                if [ $beg -lt 4 ]; then
-                        hln=$beg
-                        beg=1
-                else
-                        hln=4
-                        beg=$(($beg-3))
-                fi;
-                sed -n -e "$beg,+20p" {2} | \
-                        sed -e ${hln}s/[[]$date[]]$marker/`printf "\e[7m"`\[$date\]$marker`printf "\e[0m"`/g' \
-                --preview-window=up)
+	selected=$(report | fzf --tac --no-sort +s --preview-window=up --preview="$0 -p {}")
         selected_file_name=$(echo "${selected}" | cut -d':' -f2)
         selected_line_num=$(echo "${selected}" | cut -d':' -f3)
         exec "echo" "$selected_line_num" "$selected_file_name"
@@ -165,7 +168,7 @@ fzf_report() {
 
 [ ${#} -eq 0 ] &&
         usage 'too few arguments'
-while getopts "fhy" OPTION; do
+while getopts "fhpy" OPTION; do
         case ${OPTION} in
         f)
                 RPTCMD=report
@@ -173,6 +176,9 @@ while getopts "fhy" OPTION; do
         h)
                 usage
                 ;;
+	p)
+		fzf_preview "$2"
+		;;
         y)
                 RNGCMD=set_year_range
                 ;;
