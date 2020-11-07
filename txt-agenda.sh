@@ -160,7 +160,7 @@ fzf_preview() {
 }
 
 fzf_report() {
-	selected=$(report | fzf --tac --no-sort +s --preview-window=up --preview="$0 -p {}")
+	selected=$(report | fzf --tac --no-sort +s --preview-window=up:wrap --preview="$0 -p {}")
         selected_file_name=$(echo "${selected}" | cut -d':' -f2)
         selected_line_num=$(echo "${selected}" | cut -d':' -f3)
         exec "echo" "$selected_line_num" "$selected_file_name"
