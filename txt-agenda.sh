@@ -80,9 +80,7 @@ set_year_range() {
 }
 
 get_sort_lines() {
-	# FIXME
-	# shellcheck disable=SC2086
-	DATE_LINES="$(grep -nH '\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\][\+\!\-]' ${FILES})"
+	DATE_LINES=$(grep -nH '\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\][\+\!\-]' "$@" || true)
 	DATE_LINES=$(echo "${DATE_LINES}" | \
 	# Split lines with Awk such that every date on a line is output as a
 	# new instance of that line headed by that date in [YYYY-MM-DD] format.
@@ -189,10 +187,8 @@ while getopts "fhpy" OPTION; do
 done
 shift $((OPTIND - 1))
 
-FILES=$(for file in "$@"; do echo "$file"; done)
-
 set_date_sentinels
-get_sort_lines
+get_sort_lines "$@"
 get_sink_lines
 get_task_lines
 get_dead_lines
