@@ -1,12 +1,10 @@
 # txt-agenda
 
-Txt-agenda is a script for keeping track of dates and deadlines kept in text files.  It's core logic is POSIX compliant, but it opportunistically uses [fzf](https://github.com/junegunn/fzf) to filter, display, and jump to lines.
+Txt-agenda is a script for keeping track of dates and deadlines kept in text files.  It's core logic is POSIX compliant, but it opportunistically uses [fzf](https://github.com/junegunn/fzf) to filter, display, and jump to lines.  If fzf is not installed, or if it is suppressed with the `-f` flag, lines containing agenda items are printed on standard out.
 
-## Demo
+<!-- ## Demo -->
 
-Coming soon....
-
-![](http://johnob.sdf.org/resources/txt-agenda_demo.gif)
+<!-- ![](http://johnob.sdf.org/resources/txt-agenda_demo.gif) -->
 
 ## Usage
 
@@ -16,29 +14,24 @@ When invoked as `txt-agenda FILES`, Txt-agenda generates a chronological list of
 - Tasks `[YYYY-MM-DD]+` float after their date, and
 - Deadlines `[YYYY-MM-DD]!` float before and after their date.
 
-What that means is that a line containing the date `[2077-10-16]-` will not appear until October 16th (of 2077), then will sink as time passes until it falls outside the agenda span.  In contrast to that behavior, a line containing `[2077-10-16]+` will float near the top of the agenda once the 16th arrives, and a line containing `[2077-10-16]!` will appear at the top of the agenda several weeks before the 16th, then will float afterwards.
+What that means is that a line containing the date `[2077-10-16]-` will not appear on the agenda until October 16th (of 2077), then will sink daily until it falls outside the agenda span.  In contrast, a line containing either `[2077-10-16]+` or `[2077-10-16]!` will remain on the agenda after the 16th, and the deadline (`[2077-10-16!`) will appear at the top of the agenda several weeks beforehand.
 
+The basic form of the output from `txt-agenda` is chronological within datestamp types, with tasks after reminders and deadlines after tasks.
+
+    [2077-11-17]-:FILE_PATH:LINE_NUM:The line containing the datestamp [2077-11-17]-.
+    [2077-11-18]-:FILE_PATH:LINE_NUM:The line containing the datestamp [2077-11-18]-.
+    [2077-11-17]+:FILE_PATH:LINE_NUM:The line containing the datestamp [2077-11-17]-.
+    [2077-11-18]+:FILE_PATH:LINE_NUM:The line containing the datestamp [2077-11-18]-.
+    [2077-11-17]!:FILE_PATH:LINE_NUM:The line containing the datestamp [2077-11-17]!.
+    [2077-11-18]!:FILE_PATH:LINE_NUM:The line containing the datestamp [2077-11-18]!.
+
+### Command Line Options
+
+ | Flag | Behavior                                                      | 
  | ---  | ---                                                           | 
  | `-f` | Report without `fzf`                                          | 
  | `-h` | Print help message                                            | 
  | `-y` | Output agenda items for the year centered on the current date | 
-
-## Progress
-
-- [ ] Vim plugin for fzf.
-- [ ] Setup man file (will need to look into roff).
-    - see `man-pages(7)`
-- [x] Determine whether an appended `q` command is likely to make Sed's print commands faster; see https://stackoverflow.com/questions/83329/how-can-i-extract-a-predetermined-range-of-lines-from-a-text-file-on-unix.
-- [x] line output to something more sensible: date:line:filename:linenum; probably add a filename to the fzf preview; or maybe just change the preview layout to horizontal
-- [X] allow arguments (getopt/getopts?)
-- [X] Convert `$SORT_LINES` to a variable
-- [X] Make `date` portable
-    - [X] Set date properly when it's December or January
-- [X] Preview context for datelines in fzf.
-- [X] highlight matched date in fzf's preview window
-- [X] test filtering with fzf now!
-- [X] fix line display; ex: `[YYYY-MM-DD]+:LINUM:LINE:FILE`
-- [X] preserve references to files while arranging the agenda
 
 ## Credit
 
