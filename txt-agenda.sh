@@ -10,6 +10,8 @@ else
 fi
 RNGCMD=set_month_range
 
+PRINTSINK=true
+
 usage() {
 	cat 1>&2 <<-EOF
 	${1:+Error: ${1}}
@@ -24,6 +26,7 @@ usage() {
 	
 	Flags: 
 	-f	Suppress fzf on systems where it is present.
+	-s	Suppress printing of sinking reminders.
 	-h	Show this message.
 	-y	Output a yearlong agenda, centered on today.
 
@@ -134,7 +137,7 @@ get_dead_lines() {
 }
 
 report() {
-        { echo "${SINK_LINES}";
+        { if [ $PRINTSINK = true ]; then echo "${SINK_LINES}"; fi;
                 echo "${TASK_LINES}";
                 echo "${DEAD_LINES}"; } | sed '/^ *$/d'
         exit
@@ -166,7 +169,7 @@ fzf_report() {
 
 [ ${#} -eq 0 ] &&
         usage 'too few arguments'
-while getopts "fhpy" OPTION; do
+while getopts "fhpsy" OPTION; do
         case ${OPTION} in
         f)
                 RPTCMD=report
@@ -176,6 +179,9 @@ while getopts "fhpy" OPTION; do
                 ;;
 	p)
 		fzf_preview "$2"
+		;;
+	s)
+		PRINTSINK=false
 		;;
         y)
                 RNGCMD=set_year_range
