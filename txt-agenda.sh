@@ -3,14 +3,7 @@
 set -eu
 umask u=rwx,og=
 
-if command -v fzf >/dev/null; then 
-        RPTCMD=fzf_report
-else
-        RPTCMD=report
-fi
 RNGCMD=set_month_range
-
-PRINTSINK=true
 
 usage() {
 	cat 1>&2 <<-EOF
@@ -19,14 +12,7 @@ usage() {
 
 	Display an agenda based on [YYYY-MM-DD] formated dates in FILES.
 
-	Syntax:
-	[YYYY-MM-DD]-	is a sinking reminder,
-	[YYYY-MM-DD]+	is a floating task, and
-	[YYYY-MM-DD]!	is a looming deadline.
-	
-	Flags: 
-	-f	Suppress fzf on systems where it is present.
-	-s	Suppress printing of sinking reminders.
+	Flags:
 	-h	Show this message.
 	-y	Output a yearlong agenda, centered on today.
 
@@ -82,107 +68,61 @@ set_year_range() {
 	FUTURE_SENTINEL="$(format_date "${FYEAR}" "${MONTH}" "${DAY}")"
 }
 
-get_sort_lines() {
-	DATE_LINES=$(grep -nH '\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\][\+\!\-]' "$@" || true)
-	DATE_LINES=$(echo "${DATE_LINES}" | \
+dated_lines() {
+	DATED_LINES=$(grep -nH '\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\]' "$@" || true)
+	DATED_LINES=$(echo "${DATED_LINES}" | \
 	# Split lines with Awk such that every date on a line is output as a
 	# new instance of that line headed by that date in [YYYY-MM-DD] format.
 		awk '
 			BEGIN {
 				FS=":"
-			} 
+			}
 			{
 				line_text=substr($0, index($0,$3))
 				sub(/^\s*/, "", line_text)
 				line_dates=line_text
 				sub(/^[^\[]*\[/,"[", line_dates)
-				gsub(/\]\-[^\[]*/, "]-:", line_dates)
-				gsub(/\]\+[^\[]*/, "]+:", line_dates)
-				gsub(/\]![^\[]*/, "]!:", line_dates)
-				gsub(/\][^\[\-\+!]*\[/, "]:[", line_dates)
+				gsub(/\][^\[]*/, "]:", line_dates)
+				gsub(/\][^\[]*\[/, "]:[", line_dates)
 				split(line_dates, line_date_ary)
 				for (date_str in line_date_ary) {
 					if (line_date_ary[date_str] ~ \
-						/\[[0-9]{4}-[0-9][0-9]-[0-9][0-9]\][\-\+!]/) {
+						/\[[0-9]{4}-[0-9][0-9]-[0-9][0-9]\]/) {
 						gsub(/ /, "", line_date_ary[date_str])
 						print line_date_ary[date_str] ":" $1 ":" $2 ":" line_text
 					}
 				}
 		}')
-        DATE_LINES="${DATE_LINES}"$(echo; echo "[${PAST_SENTINEL}]"; 
-                echo "[${PRESENT_SENTINEL}]"; 
+        DATED_LINES="${DATED_LINES}"$(echo; echo "[${PAST_SENTINEL}]";
+                echo "[${PRESENT_SENTINEL}]";
                 echo "[${FUTURE_SENTINEL}]");
-        SORT_LINES=$(echo "$DATE_LINES" | sort -d);
 }
 
-get_sink_lines() {
+sorted_lines() {
+        SORT_LINES=$(echo "$DATED_LINES" | sort -d);
+}
+
+lines_in_range() {
         beg=$(echo "${SORT_LINES}" | grep -m 1 -n "^\\[${PAST_SENTINEL}\\]" | \
                 sed 's/:\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\].*$//')
-        end=$(echo "${SORT_LINES}" | grep -m 1 -n "^\\[${PRESENT_SENTINEL}\\]" | \
-                sed 's/:\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\].*$//')
-        SINK_LINES=$(echo "${SORT_LINES}" | sed -n "${beg},${end}p" | \
-                (grep '^\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\][\-]' || true))
-}
-
-get_task_lines() {
-        TASK_LINES=$(echo "${SORT_LINES}" | sed -n "1,${end}p" | \
-                (grep '^\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\][\+]' || true))
- }
-
-get_dead_lines() {
         end=$(echo "${SORT_LINES}" | grep -m 1 -n "^\\[${FUTURE_SENTINEL}\\]" | \
                 sed 's/:\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\].*$//')
-        DEAD_LINES=$(echo "${SORT_LINES}" | sed -n "1,${end}p" | \
-                (grep '^\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\][\!]' || true))
+        LINES_IN_RANGE=$(echo "${SORT_LINES}" | sed -n "${beg},${end}p" | \
+                (grep '^\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\]:' || true))
 }
 
 report() {
-        { if [ $PRINTSINK = true ]; then echo "${SINK_LINES}"; fi;
-                echo "${TASK_LINES}";
-                echo "${DEAD_LINES}"; } | sed '/^ *$/d'
+	echo "${LINES_IN_RANGE}" | sed '/^ *$/d'
         exit
-}
-
-fzf_preview() {
-	beg=$(echo "$1" | cut -d':' -f3)
-	date=$(echo "$1" | cut -d':' -f1 | sed "s/^\\[\\([0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9]\\)\\]./\\1/")
-	file=$(echo "$1" | cut -d':' -f2) 
-	marker=$(echo "$1" | cut -d':' -f1 | sed "s/^\\[[0-9]\\{4\\}-[0-9][0-9]-[0-9][0-9]\\]\\(.\\)/\\1/")
-	if [ "$beg" -lt 4 ]; then
-		hln=$beg
-		beg=1
-	else
-		hln=4
-		beg=$((beg-3))
-	fi
-	sed -n -e "$beg,+20p" "$file" | \
-		sed -e ${hln}s/[[]"$date"[]]"$marker"/"$(printf "\\e[7m")"\["$date"\]"$marker""$(printf "\\e[0m")"/g
-	exit
-}
-
-fzf_report() {
-	selected=$(report | fzf --tac --no-sort +s --preview-window=up:wrap --preview="$0 -p {}")
-        selected_file_name=$(echo "${selected}" | cut -d':' -f2)
-        selected_line_num=$(echo "${selected}" | cut -d':' -f3)
-        exec "echo" "$selected_line_num" "$selected_file_name"
 }
 
 [ ${#} -eq 0 ] &&
         usage 'too few arguments'
-while getopts "fhpsy" OPTION; do
+while getopts "hy" OPTION; do
         case ${OPTION} in
-        f)
-                RPTCMD=report
-                ;;
         h)
                 usage
                 ;;
-	p)
-		fzf_preview "$2"
-		;;
-	s)
-		PRINTSINK=false
-		;;
         y)
                 RNGCMD=set_year_range
                 ;;
@@ -194,8 +134,7 @@ done
 shift $((OPTIND - 1))
 
 set_date_sentinels
-get_sort_lines "$@"
-get_sink_lines
-get_task_lines
-get_dead_lines
-${RPTCMD}
+dated_lines "$@"
+sorted_lines
+lines_in_range
+report
