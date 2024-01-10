@@ -3,7 +3,15 @@
 set -eu
 umask u=rwx,og=
 
-RNGCMD=set_month_range
+strip_leading_zeroes() {
+	n=$1
+	while [ "$n" != "${n#0}" ] ;do n=${n#0};done
+	echo "$n"
+}
+
+YEAR=$(strip_leading_zeroes "$(date "+%Y")")
+MONTH=$(strip_leading_zeroes "$(date "+%m")")
+DAY=$(strip_leading_zeroes "$(date "+%d")")
 
 usage() {
 	cat 1>&2 <<-EOF
@@ -20,19 +28,6 @@ usage() {
 
 	EOF
 	exit ${1:+1}
-}
-
-strip_leading_zeroes() {
-	n=$1
-	while [ "$n" != "${n#0}" ] ;do n=${n#0};done
-	echo "$n"
-}
-
-set_date_sentinels() {
-	YEAR=$(strip_leading_zeroes "$(date "+%Y")")
-	MONTH=$(strip_leading_zeroes "$(date "+%m")")
-	DAY=$(strip_leading_zeroes "$(date "+%d")")
-        ${RNGCMD}
 }
 
 format_date() {
@@ -54,6 +49,21 @@ set_past_sentinel() {
 		fi
 	done
         PAST_SENTINEL="$(format_date "${BYEAR}" "${BMONTH}" "${DAY}")"
+}
+
+set_future_sentinel() {
+        FYEAR=${YEAR}
+        FMONTH=${MONTH}
+	for i in `seq $1`; do
+		if [ "${FMONTH}" -eq 12 ]; then
+			FMONTH=01
+			FYEAR=$((FYEAR + 1))
+		else
+			FMONTH=$((FMONTH + 1))
+		fi
+	done
+	FUTURE_SENTINEL="$(format_date "${FYEAR}" "${FMONTH}" "${DAY}")"
+	echo $FUTURE_SENTINEL
 }
 
 set_month_range() {
@@ -130,23 +140,18 @@ report() {
         exit
 }
 
-set_date_sentinels
-
 [ ${#} -eq 0 ] &&
         usage 'too few arguments'
-while getopts "p:hy" OPTION; do
+while getopts "p:f:h" OPTION; do
         case ${OPTION} in
 	p)
 		set_past_sentinel $2
 		;;
-	# f)
-		# set_future_sentinel
-		# ;;
+	f)
+		set_future_sentinel $2
+		;;
         h)
                 usage
-                ;;
-        y)
-                RNGCMD=set_year_range
                 ;;
         *)
                 usage 'invalid option'
