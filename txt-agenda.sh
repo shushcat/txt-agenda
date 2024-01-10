@@ -22,6 +22,12 @@ usage() {
 	exit ${1:+1}
 }
 
+strip_leading_zeroes() {
+	n=$1
+	while [ "$n" != "${n#0}" ] ;do n=${n#0};done
+	echo "$n"
+}
+
 set_date_sentinels() {
 	YEAR=$(strip_leading_zeroes "$(date "+%Y")")
 	MONTH=$(strip_leading_zeroes "$(date "+%m")")
@@ -29,17 +35,25 @@ set_date_sentinels() {
         ${RNGCMD}
 }
 
-strip_leading_zeroes() {
-	n=$1
-	while [ "$n" != "${n#0}" ] ;do n=${n#0};done
-	echo "$n"
-}
-
 format_date() {
 	y=$1
 	m=$2
 	d=$3
 	printf "%04d-%02d-%02d" "$y" "$m" "$d"
+}
+
+set_past_sentinel() {
+        BYEAR=${YEAR}
+        BMONTH=${MONTH}
+	for i in `seq $1`; do
+		if [ "${BMONTH}" -eq 1 ]; then
+			BMONTH=12
+			BYEAR=$((BYEAR - 1))
+		else
+			BMONTH=$((BMONTH - 1))
+		fi
+	done
+        PAST_SENTINEL="$(format_date "${BYEAR}" "${BMONTH}" "${DAY}")"
 }
 
 set_month_range() {
@@ -116,10 +130,18 @@ report() {
         exit
 }
 
+set_date_sentinels
+
 [ ${#} -eq 0 ] &&
         usage 'too few arguments'
-while getopts "hy" OPTION; do
+while getopts "p:hy" OPTION; do
         case ${OPTION} in
+	p)
+		set_past_sentinel $2
+		;;
+	# f)
+		# set_future_sentinel
+		# ;;
         h)
                 usage
                 ;;
@@ -133,7 +155,7 @@ while getopts "hy" OPTION; do
 done
 shift $((OPTIND - 1))
 
-set_date_sentinels
+exit
 dated_lines "$@"
 sorted_lines
 lines_in_range
