@@ -9,32 +9,35 @@ strip_leading_zeroes() {
 	echo "$n"
 }
 
-YEAR=$(strip_leading_zeroes "$(date "+%Y")")
-MONTH=$(strip_leading_zeroes "$(date "+%m")")
-DAY=$(strip_leading_zeroes "$(date "+%d")")
-
-usage() {
-	cat 1>&2 <<-EOF
-	${1:+Error: ${1}}
-	USAGE:  ${0##*/} [-fhy] FILES
-
-	Display an agenda based on [YYYY-MM-DD] formated dates in FILES.
-
-	Flags:
-	-h	Show this message.
-	-y	Output a yearlong agenda, centered on today.
-
-	Some day, you will look to txt-agenda(1) for surehanded guidance in all things.
-
-	EOF
-	exit ${1:+1}
-}
-
 format_date() {
 	y=$1
 	m=$2
 	d=$3
 	printf "%04d-%02d-%02d" "$y" "$m" "$d"
+}
+
+YEAR=$(strip_leading_zeroes "$(date "+%Y")")
+MONTH=$(strip_leading_zeroes "$(date "+%m")")
+DAY=$(strip_leading_zeroes "$(date "+%d")")
+PRESENT_SENTINEL="$(format_date "${YEAR}" "${MONTH}" "$((DAY + 1))")"
+
+usage() {
+	cat 1>&2 <<-EOF
+	${1:+Error: ${1}}
+	USAGE:  ${0##*/} [-pfh] FILES
+
+	Print a sorted list of lines in FILES that contain [YYYY-MM-DD]
+	formatted dates.
+
+	Flags:
+	-p	Set the number of months to look into the past.
+	-f	Set the number of months to look into the future.
+	-h	Show this message.
+
+	Some day, you will look to txt-agenda(1) for surehanded guidance in all things.
+
+	EOF
+	exit ${1:+1}
 }
 
 set_past_sentinel() {
@@ -63,33 +66,6 @@ set_future_sentinel() {
 		fi
 	done
 	FUTURE_SENTINEL="$(format_date "${FYEAR}" "${FMONTH}" "${DAY}")"
-	echo $FUTURE_SENTINEL
-}
-
-set_month_range() {
-        BYEAR=${YEAR}
-        FYEAR=${YEAR}
-	BMONTH=$((MONTH - 1))
-	FMONTH=$((MONTH + 1))
-        # Account for January and December.
-        if [ "${MONTH}" -eq 1 ]; then
-                BMONTH=12
-                BYEAR=$((YEAR - 1))
-        elif [ "${MONTH}" -eq 12 ]; then
-                FMONTH=01
-                FYEAR=$((YEAR + 1))
-        fi
-        PAST_SENTINEL="$(format_date "${BYEAR}" "${BMONTH}" "${DAY}")"
-	PRESENT_SENTINEL="$(format_date "${YEAR}" "${MONTH}" "$((DAY + 1))")"
-	FUTURE_SENTINEL="$(format_date "${FYEAR}" "${FMONTH}" "${DAY}")"
-}
-
-set_year_range() {
-        BYEAR=$((YEAR - 1))
-        FYEAR=$((YEAR + 1))
-        PAST_SENTINEL="$(format_date "${BYEAR}" "${MONTH}" "${DAY}")"
-	PRESENT_SENTINEL="$(format_date "${YEAR}" "${MONTH}" "$((DAY + 1))")"
-	FUTURE_SENTINEL="$(format_date "${FYEAR}" "${MONTH}" "${DAY}")"
 }
 
 dated_lines() {
@@ -140,6 +116,10 @@ report() {
         exit
 }
 
+# Look one month into the past and one month into the future by default.
+set_past_sentinel 1
+set_future_sentinel 1
+
 [ ${#} -eq 0 ] &&
         usage 'too few arguments'
 while getopts "p:f:h" OPTION; do
@@ -160,7 +140,6 @@ while getopts "p:f:h" OPTION; do
 done
 shift $((OPTIND - 1))
 
-exit
 dated_lines "$@"
 sorted_lines
 lines_in_range
