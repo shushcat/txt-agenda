@@ -24,20 +24,36 @@ PRESENT_SENTINEL="$(format_date "${YEAR}" "${MONTH}" "$((DAY + 1))")"
 usage() {
 	cat 1>&2 <<-EOF
 	${1:+Error: ${1}}
-	USAGE:  ${0##*/} [-pfh] FILES
+	USAGE:  ${0##*/} [-p NUM] [-f NUM] [-h] FILES
 
 	Print a sorted list of lines in FILES that contain [YYYY-MM-DD]
 	formatted dates.
 
 	Flags:
-	-p	Set the number of months to look into the past.
-	-f	Set the number of months to look into the future.
+	-p NUM	Include dates up to NUM months in the past.
+	-f NUM	Include dates up to NUM months in the future.
 	-h	Show this message.
 
 	Some day, you will look to txt-agenda(1) for surehanded guidance in all things.
 
 	EOF
 	exit ${1:+1}
+}
+ 
+is_int() {
+	if [ "$(($1 + 0))" -eq 0 ]; then
+		return 1
+	else
+		return 0
+	fi
+}
+
+is_pos_int() {
+	if $(is_int "$1") && [ "${OPTARG}" -gt 0 ]; then
+		return 0
+	else
+		return 1
+	fi
 }
 
 set_past_sentinel() {
@@ -125,10 +141,12 @@ set_future_sentinel 1
 while getopts "p:f:h" OPTION; do
         case ${OPTION} in
 	p)
-		set_past_sentinel $2
+		is_pos_int "${OPTARG}" || usage "-p requires a positive integer"
+		set_past_sentinel ${OPTARG}
 		;;
 	f)
-		set_future_sentinel $2
+		is_pos_int "${OPTARG}" || usage "-f requires a positive integer"
+		set_future_sentinel ${OPTARG}
 		;;
         h)
                 usage
