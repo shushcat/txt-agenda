@@ -94,7 +94,6 @@ dated_lines() {
 			{
 				line_text=substr($0, index($0,$3))
 				sub(/^\s*/, "", line_text)
-				line_dates=line_text
 				split(line_text, line_tokens, " ")
 				for (i in line_tokens) {
 					if (match(line_tokens[i], /[0-9]{4}-[0-9][0-9]-[0-9][0-9]/)) {
