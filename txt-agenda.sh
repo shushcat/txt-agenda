@@ -26,7 +26,7 @@ usage() {
 	${1:+Error: ${1}}
 	USAGE:  ${0##*/} [-p NUM] [-f NUM] [-h] FILES
 
-	Print a sorted list of lines in FILES that contain [YYYY-MM-DD]
+	Print a sorted list of lines in FILES that contain `YYYY-MM-DD`
 	formatted dates.
 
 	Flags:
@@ -85,30 +85,24 @@ set_future_sentinel() {
 }
 
 dated_lines() {
-	DATED_LINES=$(grep -nH '\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\]' "$@" || true)
+	DATED_LINES=$(grep -nH '[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]' "$@" || true)
 	DATED_LINES=$(echo "${DATED_LINES}" | \
 	# Split lines with Awk such that every date on a line is output as a
-	# new instance of that line headed by that date in [YYYY-MM-DD] format.
+	# new instance of that line headed by that date in `YYYY-MM-DD` format.
 		awk '
-			BEGIN {
-				FS=":"
-			}
+			BEGIN { FS=":" }
 			{
 				line_text=substr($0, index($0,$3))
 				sub(/^\s*/, "", line_text)
 				line_dates=line_text
-				sub(/^[^\[]*\[/,"[", line_dates)
-				gsub(/\][^\[]*/, "]:", line_dates)
-				gsub(/\][^\[]*\[/, "]:[", line_dates)
-				split(line_dates, line_date_ary)
-				for (date_str in line_date_ary) {
-					if (line_date_ary[date_str] ~ \
-						/\[[0-9]{4}-[0-9][0-9]-[0-9][0-9]\]/) {
-						gsub(/ /, "", line_date_ary[date_str])
-						print line_date_ary[date_str] ":" $1 ":" $2 ":" line_text
+				split(line_text, line_tokens, " ")
+				for (i in line_tokens) {
+					if (line_tokens[i] ~ \
+						/[0-9]{4}-[0-9][0-9]-[0-9][0-9]/) {
+						print line_tokens[i] ":" $1 ":" $2 ":" line_text
 					}
 				}
-		}')
+			}')
         DATED_LINES="${DATED_LINES}"$(echo; echo "[${PAST_SENTINEL}]";
                 echo "[${PRESENT_SENTINEL}]";
                 echo "[${FUTURE_SENTINEL}]");
