@@ -1,6 +1,6 @@
 # txt-agenda
 
-`txt-agenda` is a POSIX compliant script that searches text files to find and print lines containing `[YYYY-MM-DD]`-formatted dates.
+`txt-agenda` is a POSIX compliant script that searches text files to find and print lines containing `YYYY-MM-DD`-formatted dates.
 Lines are sorted by date, but each line is prefixed with the file name and line number where it was found.
 When called on one or more files, as in `txt-agenda FILES`, it returns lines from `FILES` that contain dates within one month of the current date.
 The date range can be inclusively extended with the `-p` (for **p**ast) and `-f` (for **f**uture) flags, so `txt-agenda -p 1 -f 4 FILES` will return all lines from `FILES` that contain dates that are no more that 1 month in the past and no more than 4 months in the future.

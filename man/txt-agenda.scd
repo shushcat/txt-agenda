@@ -2,7 +2,7 @@ txt-agenda(1)
 
 # NAME
 
-txt-agenda - generate and display an agenda from text files
+txt-agenda - generate and display an agenda from text files containing `YYYY-MM-DD`-formatted dates.
 
 # SYNOPSIS
 
