@@ -103,9 +103,9 @@ dated_lines() {
 					}
 				}
 			}')
-        DATED_LINES="${DATED_LINES}"$(echo; echo "[${PAST_SENTINEL}]";
-                echo "[${PRESENT_SENTINEL}]";
-                echo "[${FUTURE_SENTINEL}]");
+        DATED_LINES="${DATED_LINES}"$(echo; echo "${PAST_SENTINEL}";
+                echo "${PRESENT_SENTINEL}";
+                echo "${FUTURE_SENTINEL}");
 }
 
 sorted_lines() {
@@ -113,12 +113,12 @@ sorted_lines() {
 }
 
 lines_in_range() {
-        beg=$(echo "${SORT_LINES}" | grep -m 1 -n "^\\[${PAST_SENTINEL}\\]" | \
-                sed 's/:\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\].*$//')
-        end=$(echo "${SORT_LINES}" | grep -m 1 -n "^\\[${FUTURE_SENTINEL}\\]" | \
-                sed 's/:\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\].*$//')
+        beg=$(echo "${SORT_LINES}" | grep -m 1 -n "^${PAST_SENTINEL}" | \
+                sed 's/:[0-9]\{4\}-[0-9][0-9]-[0-9][0-9].*$//')
+        end=$(echo "${SORT_LINES}" | grep -m 1 -n "^${FUTURE_SENTINEL}" | \
+                sed 's/:[0-9]\{4\}-[0-9][0-9]-[0-9][0-9].*$//')
         LINES_IN_RANGE=$(echo "${SORT_LINES}" | sed -n "${beg},${end}p" | \
-                (grep '^\[[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]\]:' || true))
+                (grep '^[0-9]\{4\}-[0-9][0-9]-[0-9][0-9]:' || true))
 }
 
 report() {
