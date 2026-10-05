@@ -97,9 +97,8 @@ dated_lines() {
 				line_dates=line_text
 				split(line_text, line_tokens, " ")
 				for (i in line_tokens) {
-					if (line_tokens[i] ~ \
-						/[0-9]{4}-[0-9][0-9]-[0-9][0-9]/) {
-						print line_tokens[i] ":" $1 ":" $2 ":" line_text
+					if (match(line_tokens[i], /[0-9]{4}-[0-9][0-9]-[0-9][0-9]/)) {
+						print substr(line_tokens[i],RSTART,RLENGTH) ":" $1 ":" $2 ":" line_text
 					}
 				}
 			}')
